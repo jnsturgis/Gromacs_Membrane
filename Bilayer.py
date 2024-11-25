@@ -1,8 +1,11 @@
-class Bilayer:
+"""
+Module docstring
+"""
+class BilayerMembrane:
     """
     A class to contain a bilayer structure.
     """
-    def __init__( self, upper_leaf: GroStruct, lower_leaf: GroStruct ):
+    def __init__( self, upper_leaf: MDStruct, lower_leaf: MDStruct ):
         self.upper_hg = upper_leaf
         self.lower_hg = lower_leaf
         self.energy   = 0.0
@@ -10,14 +13,17 @@ class Bilayer:
 
     def report( self, verbosity: int ) -> None:
         print( "***This is a membrane report.***" )
-        print( f'Membrane width from difference in z position of leaflets is: {self.upper_hg.centroid()[2] - self.lower_hg.centroid()[2]:.3f} nm.' )
-        
+        print( f'Membrane width from difference in z position of leaflets is:' +
+               f'{self.upper_hg.centroid()[2] - self.lower_hg.centroid()[2]:.3f} nm.' )
+
         # This next section analyses the membrane as an elastic bilayer for
         # curvature and bending constant
         # thickness and spring constant
         
-        print( f'Upper leaflet area is {t_area:9.2f} nm$^2$, giving {t_area / float(len(p_top)):8.4f} nm$^2$/PO$_4$.' )
-        print( f'Lower leaflet area is {b_area:9.2f} nm$^2$, giving {b_area / float(len(p_bottom)):8.4f} nm$^2$/PO$_4$.' )
+        print( f'Upper leaflet area is {t_area:9.2f} nm$^2$, ' + 
+               f'giving {t_area / float(len(p_top)):8.4f} nm$^2$/PO$_4$.' )
+        print( f'Lower leaflet area is {b_area:9.2f} nm$^2$, ' + 
+               f'giving {b_area / float(len(p_bottom)):8.4f} nm$^2$/PO$_4$.' )
 
         # Energy density
         if self.energy != 0.0 :
