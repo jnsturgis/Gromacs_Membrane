@@ -1,0 +1,11 @@
+
+This repository contains a set of structures and routines for extracting information about lipid bilayer membranes from molecular dynamics simulations.
+
+The initial versions are designed to get information from simulations of a membrane using the Martini_3 forcefield in Gromacs. However, the objective is to be forcefield and molecular dynamics engine agnostic and collect information from trajectory files and structure files.
+
+Top level concepts and ideas.
+* A bilayer is composed of two (more or less well defined) leaflets.
+* A leaflet is composed of a set of residues, each of which is composed of "atoms"
+* In a periodic box the bilayer can be continuous in 0, 1 or 2 axes
+
+
