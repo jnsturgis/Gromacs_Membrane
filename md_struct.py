@@ -6,6 +6,8 @@
 # Developing a structure class for aiding python based analysis
 # Inspired by gropy written by Caizkun (?2019)
 #
+import numpy as np
+
 class MDStruct():
     """
     A structural configuration class, for example from a molecular dynamics or structure file.
@@ -124,7 +126,7 @@ class MDStruct():
 
         for atom in self.atoms:
             at_name = atom[2]
-            if at_name == "PO4" or at_name == "PA4" or at_name == "PB4":
+            if at_name in ("PO4", "PA4", "PB4"):
                 new_structure.n_atoms += 1
                 new_structure.atoms.append( atom )
 
@@ -136,8 +138,10 @@ class MDStruct():
         Select atoms based on a range of atom_id numbers.
         """
 
-        if start < 0 : start = self.n_atoms + 1 + start
-        if end   < 0 : end   = self.n_atoms + 1 + end
+        if start < 0 : 
+            start = self.n_atoms + 1 + start
+        if end   < 0 : 
+            end   = self.n_atoms + 1 + end
 
         assert start <= end , "The 'start' must be less than 'end'"
 
@@ -154,6 +158,7 @@ class MDStruct():
         return new_structure
 
     def centroid( self ) :
+        """Calculate the center of the atoms in a structure"""
         center = np.array([0.0, 0.0, 0.0])
         count = 0
         for atom in self.atoms:
@@ -163,11 +168,13 @@ class MDStruct():
         return center
 
     def report( self, verbosity: int ) -> None:
+        """Print a report on the structure, depending on the level of verbosity desired."""
         print( f"This is a report on the structure:\n{self.title}" )
         print( f"The structure contains {self.n_atoms} atoms in {self.n_residues()} residues." )
         print()
-        pass
+        # pass
 
     def match( self, expression: str, atom: list ) -> bool :
+        """Does the atom match the selection expression?"""
         return False
-        pass
+        # pass
