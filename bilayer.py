@@ -14,21 +14,23 @@ class Bilayer:
 
     def report( self, verbosity: int ) -> None:
         print( "***This is a membrane report.***" )
-        print( f'Membrane width from difference in z position of leaflets is:' +
+        print( 'Membrane width from difference in z position of leaflets is:' +
                f'{self.upper_hg.centroid()[2] - self.lower_hg.centroid()[2]:.3f} nm.' )
 
         # This next section analyses the membrane as an elastic bilayer for
         # curvature and bending constant
         # thickness and spring constant
-        
-        print( f'Upper leaflet area is {t_area:9.2f} nm$^2$, ' + 
+
+        print( f'Upper leaflet area is {t_area:9.2f} nm$^2$, ' +
                f'giving {t_area / float(len(p_top)):8.4f} nm$^2$/PO$_4$.' )
-        print( f'Lower leaflet area is {b_area:9.2f} nm$^2$, ' + 
+        print( f'Lower leaflet area is {b_area:9.2f} nm$^2$, ' +
                f'giving {b_area / float(len(p_bottom)):8.4f} nm$^2$/PO$_4$.' )
 
         # Energy density
         if self.energy != 0.0 :
             print ( f'Membrane energy density is {energies[i]/(t_area+b_area):9.2f} kJ/nm².' )
-        
+
         print( "" )
-        pass
+
+    def thickness( self ):
+    	pass
