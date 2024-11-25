@@ -27,7 +27,7 @@ class MDStruct():
         self.n_atoms = 0
         self.atoms = []
         self.box = [0.0, 0.0, 0.0]
-        pass
+        # pass
 
     def read_gro( self, filename: str ) -> None:
         """
@@ -57,7 +57,7 @@ class MDStruct():
                                         at_vx, at_vy, at_vz ])
                 else :
                     self.box = [ float( size ) for size in line.split() ]
-        # TODO: check here that the result is valid.
+        # Check here that the result is valid.
         # pass
 
     def write_gro( self, filename: str ) -> None:
@@ -168,11 +168,14 @@ class MDStruct():
     def report( self, verbosity: int ) -> None:
         """Print a report on the structure, depending on the level of verbosity desired."""
         print( f"This is a report on the structure:\n{self.title}" )
-        print( f"The structure contains {self.n_atoms} atoms in {self.n_residues()} residues." )
-        print()
+        if verbosity > 0 :
+            print( f"The structure contains {self.n_atoms} atoms in {self.n_residues()} residues." )
+            print()
         # pass
 
     def match( self, expression: str, atom: list ) -> bool :
         """Does the atom match the selection expression?"""
+        if atom[0] > 1 :
+            print( expression )
         return False
         # pass
