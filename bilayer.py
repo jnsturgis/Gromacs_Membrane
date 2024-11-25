@@ -32,9 +32,9 @@ class Bilayer:
         # thickness and spring constant
         if verbosity > 0 :
             print( f'Upper leaflet area is {self.t_area:9.2f} nm$^2$, ' +
-                   f'giving {self.t_area / float(self.n_headgroup(1))):8.4f} nm$^2$/PO$_4$.' )
+                   f'giving {self.t_area / float(self.n_headgroup(1)):8.4f} nm$^2$/PO$_4$.' )
             print( f'Lower leaflet area is {self.b_area:9.2f} nm$^2$, ' +
-                   f'giving {self.b_area / float(self.n_headgroup(0))):8.4f} nm$^2$/PO$_4$.' )
+                   f'giving {self.b_area / float(self.n_headgroup(0)):8.4f} nm$^2$/PO$_4$.' )
 
         # Energy density
         if self.energy != 0.0 :
