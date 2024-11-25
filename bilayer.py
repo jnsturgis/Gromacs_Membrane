@@ -12,7 +12,14 @@ class Bilayer:
         self.energy   = 0.0
         self.t_area   = 0.0
         self.b_area   = 0.0
-        pass
+
+    def n_headgroup( self, leaflet: int ) -> int:
+        if leaflet == 0:
+            return self.lower_leaf.n_residues()
+        if leaflet == 1:
+            return self.upper_leaf.n_residues()
+        else :
+            raise( ValueError, "Unknown leaflet." )
 
     def report( self, verbosity: int ) -> None:
         """Print a report about the membrane structure that is more or less verbose"""
@@ -25,9 +32,9 @@ class Bilayer:
         # thickness and spring constant
         if verbosity > 0 :
             print( f'Upper leaflet area is {self.t_area:9.2f} nm$^2$, ' +
-                   f'giving {self.t_area / float(len(p_top)):8.4f} nm$^2$/PO$_4$.' )
+                   f'giving {self.t_area / float(self.n_headgroup(1))):8.4f} nm$^2$/PO$_4$.' )
             print( f'Lower leaflet area is {self.b_area:9.2f} nm$^2$, ' +
-                   f'giving {self.b_area / float(len(p_bottom)):8.4f} nm$^2$/PO$_4$.' )
+                   f'giving {self.b_area / float(self.n_headgroup(0))):8.4f} nm$^2$/PO$_4$.' )
 
         # Energy density
         if self.energy != 0.0 :
@@ -37,4 +44,4 @@ class Bilayer:
 
     def thickness( self ):
         """Analyse the membrane thickness"""
-        pass
+
