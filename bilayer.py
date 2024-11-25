@@ -14,12 +14,17 @@ class Bilayer:
         self.b_area   = 0.0
 
     def n_headgroup( self, leaflet: int ) -> int:
+        """
+        Find the number of headgroups in the lower leaflet (0), upper leaflet (1) or
+        in both leaflets (2).
+        """
         if leaflet == 0:
-            return self.lower_leaf.n_residues()
+            return self.lower_hg.n_residues()
         if leaflet == 1:
-            return self.upper_leaf.n_residues()
-        else :
-            raise( ValueError, "Unknown leaflet." )
+            return self.upper_hg.n_residues()
+        if leaflet == 2:
+            return self.lower_hg.n_residues() + self.upper_hg.n_residues()
+        raise ValueError ("Unknown leaflet.")
 
     def report( self, verbosity: int ) -> None:
         """Print a report about the membrane structure that is more or less verbose"""
@@ -38,7 +43,8 @@ class Bilayer:
 
         # Energy density
         if self.energy != 0.0 :
-            print ( f'Membrane energy density is {self.energy/(self.t_area+self.b_area):9.2f} kJ/nm².' )
+            print ( 'Membrane energy density is ' +
+                    f'{self.energy/(self.t_area+self.b_area):9.2f} kJ/nm².' )
 
         print( "" )
 

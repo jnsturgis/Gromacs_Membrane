@@ -52,24 +52,25 @@ class MDStruct():
                         at_vx = 0.0
                         at_vy = 0.0
                         at_vz = 0.0
-                    self.atoms.append([ res_id, res_name, at_name, at_id, at_x, at_y, at_z, at_vx, at_vy, at_vz ])
+                    self.atoms.append([ res_id, res_name, at_name, at_id, 
+                                        at_x, at_y, at_z, at_vx, at_vy, at_vz ])
                 else :
                     self.box = [ float( size ) for size in line.split() ]
         # TODO: check here that the result is valid.
-        pass
+        # pass
 
     def write_gro( self, filename: str ) -> None:
         """
         Write a valid .gro file into the named file using the structure. Note that this
         can cause loss of precision as floats are truncated etc.
         """
-        pass
+        # pass
 
     def n_residues( self ) -> int:
         """
         Count the number of residues in the structure.
-        This requires and assumes that all atoms of an individual residue are grouped together, it also assumes that
-        negative residue id's are invalid.
+        This requires and assumes that all atoms of an individual residue are grouped together,
+        it also assumes that negative residue id's are invalid.
         """
         count = 0
         last_resid = -1
@@ -92,9 +93,9 @@ class MDStruct():
                 curr_resid += 1
             atom[0] = curr_resid
             atom[3] = curr_atomid
-        
+
         assert curr_atomid == self.n_atoms
-        pass
+        # pass
 
     def select( self, expression: str ) -> GroStruct :
         """
@@ -104,7 +105,7 @@ class MDStruct():
         new_structure = GroStruct()
         new_structure.title = "Select using "+ expression+" of "+self.title
         new_structure.box   = self.box
-        
+
         for atom in self.atoms:
             if new_structure.match( expression, atom ):
                 new_structure.n_atoms += 1
