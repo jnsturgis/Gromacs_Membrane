@@ -51,3 +51,4 @@ class Bilayer:
     def thickness( self ):
         """Analyse the membrane thickness"""
 
+    # THE END

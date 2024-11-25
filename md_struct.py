@@ -1,3 +1,4 @@
+""" This module implements a structure from a molecular dynamics simulation."""
 #
 # Cell for programme development using classes
 #
@@ -52,7 +53,7 @@ class MDStruct():
                         at_vx = 0.0
                         at_vy = 0.0
                         at_vz = 0.0
-                    self.atoms.append([ res_id, res_name, at_name, at_id, 
+                    self.atoms.append([ res_id, res_name, at_name, at_id,
                                         at_x, at_y, at_z, at_vx, at_vy, at_vz ])
                 else :
                     self.box = [ float( size ) for size in line.split() ]
@@ -74,7 +75,7 @@ class MDStruct():
         """
         count = 0
         last_resid = -1
-        for atom in atoms:
+        for atom in self.atoms:
             if atom[0] != last_resid :
                 last_resid = atom[0]
                 count += 1
@@ -97,12 +98,12 @@ class MDStruct():
         assert curr_atomid == self.n_atoms
         # pass
 
-    def select( self, expression: str ) -> GroStruct :
+    def select( self, expression: str ) -> MDStruct :
         """
         Create a new structure from a selection of the structure based on the expression.
         Currently this is performed by several specialized versions below.
         """
-        new_structure = GroStruct()
+        new_structure = MDStruct()
         new_structure.title = "Select using "+ expression+" of "+self.title
         new_structure.box   = self.box
 
@@ -113,11 +114,11 @@ class MDStruct():
         new_structure.renumber()
         return new_structure
 
-    def select_hg( self ) -> GroStruct :
+    def select_hg( self ) -> MDStruct :
         """
         Select headgroup atoms from a structure.
         """
-        new_structure = GroStruct()
+        new_structure = MDStruct()
         new_structure.title = "Headgroups (PO4, PA4, PB4) extracted from "+self.title
         new_structure.box   = self.box
 
@@ -130,7 +131,7 @@ class MDStruct():
         new_structure.renumber()
         return new_structure
 
-    def select_id( self, start: int, end: int ) -> GroStruct :
+    def select_id( self, start: int, end: int ) -> MDStruct :
         """
         Select atoms based on a range of atom_id numbers.
         """
@@ -139,16 +140,16 @@ class MDStruct():
         if end   < 0 : end   = self.n_atoms + 1 + end
 
         assert start <= end , "The 'start' must be less than 'end'"
-        
-        new_structure = GroStruct()
-        new_structure.title = f"Select {start} to {end} of "+self.title
+
+        new_structure = MDStruct()
+        new_structure.title = f"Select {start} to {end} of " + self.title
         new_structure.box   = self.box
 
         for atom in self.atoms:
             if atom[3] <= end and atom[3] >= start :
                 new_structure.n_atoms += 1
                 new_structure.atoms.append( atom )
-                
+
         new_structure.renumber()
         return new_structure
 
@@ -160,7 +161,7 @@ class MDStruct():
             count += 1
         center /= count
         return center
-        
+
     def report( self, verbosity: int ) -> None:
         print( f"This is a report on the structure:\n{self.title}" )
         print( f"The structure contains {self.n_atoms} atoms in {self.n_residues()} residues." )
