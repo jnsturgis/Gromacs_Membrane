@@ -1,6 +1,6 @@
 """ This module is designed to analyse membrane bilayer structures """
 
-import md_struct
+from md_struct import MDStruct
 
 class Bilayer:
     """
@@ -10,6 +10,8 @@ class Bilayer:
         self.upper_hg = upper_leaf
         self.lower_hg = lower_leaf
         self.energy   = 0.0
+        self.t_area   = 0.0
+        self.b_area   = 0.0
         pass
 
     def report( self, verbosity: int ) -> None:
@@ -22,14 +24,14 @@ class Bilayer:
         # curvature and bending constant
         # thickness and spring constant
         if verbosity > 0 :
-            print( f'Upper leaflet area is {t_area:9.2f} nm$^2$, ' +
-                   f'giving {t_area / float(len(p_top)):8.4f} nm$^2$/PO$_4$.' )
-            print( f'Lower leaflet area is {b_area:9.2f} nm$^2$, ' +
-                   f'giving {b_area / float(len(p_bottom)):8.4f} nm$^2$/PO$_4$.' )
+            print( f'Upper leaflet area is {self.t_area:9.2f} nm$^2$, ' +
+                   f'giving {self.t_area / float(len(p_top)):8.4f} nm$^2$/PO$_4$.' )
+            print( f'Lower leaflet area is {self.b_area:9.2f} nm$^2$, ' +
+                   f'giving {self.b_area / float(len(p_bottom)):8.4f} nm$^2$/PO$_4$.' )
 
         # Energy density
         if self.energy != 0.0 :
-            print ( f'Membrane energy density is {energies[i]/(t_area+b_area):9.2f} kJ/nm².' )
+            print ( f'Membrane energy density is {self.energy/(self.t_area+self.b_area):9.2f} kJ/nm².' )
 
         print( "" )
 
