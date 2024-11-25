@@ -1,4 +1,6 @@
 """ This module implements a structure from a molecular dynamics simulation."""
+from __future__ import annotations
+
 #
 # Cell for programme development using classes
 #
@@ -6,6 +8,7 @@
 # Developing a structure class for aiding python based analysis
 # Inspired by gropy written by Caizkun (?2019)
 #
+
 import numpy as np
 
 class MDStruct():
@@ -31,7 +34,7 @@ class MDStruct():
         Read the structure that is included in the file "filename". 
         6/11/2024 Version 1 taken from above.
         """
-        with open(filename, 'r') as file_id:
+        with open(filename, 'r', encoding="utf-8") as file_id:
             for line_count, line in enumerate(file_id):
                 line = line.rstrip()
                 if   line_count == 0 :
@@ -40,13 +43,6 @@ class MDStruct():
                     self.n_atoms = int(line)
                     last_line = self.n_atoms + 1
                 elif line_count <= last_line :
-                    res_id   = int(line[0:5])
-                    res_name = line[5:10].strip()
-                    at_name  = line[10:15].strip()
-                    at_id    = int(line[15:20])
-                    at_x     = float(line[20:28])
-                    at_y     = float(line[28:36])
-                    at_z     = float(line[36:44])
                     if len(line) > 44 :
                         at_vx = float(line[44:52])
                         at_vy = float(line[52:60])
@@ -55,8 +51,10 @@ class MDStruct():
                         at_vx = 0.0
                         at_vy = 0.0
                         at_vz = 0.0
-                    self.atoms.append([ res_id, res_name, at_name, at_id,
-                                        at_x, at_y, at_z, at_vx, at_vy, at_vz ])
+                    self.atoms.append([ int(line[0:5]), line[5:10].strip(),
+                                        line[10:15].strip(), int(line[15:20]),
+                                        float(line[20:28]), float(line[28:36]), float(line[36:44]),
+                                        at_vx, at_vy, at_vz ])
                 else :
                     self.box = [ float( size ) for size in line.split() ]
         # TODO: check here that the result is valid.
@@ -138,9 +136,9 @@ class MDStruct():
         Select atoms based on a range of atom_id numbers.
         """
 
-        if start < 0 : 
+        if start < 0 :
             start = self.n_atoms + 1 + start
-        if end   < 0 : 
+        if end   < 0 :
             end   = self.n_atoms + 1 + end
 
         assert start <= end , "The 'start' must be less than 'end'"
