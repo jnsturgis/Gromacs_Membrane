@@ -1,9 +1,10 @@
-"""
-Module docstring
-"""
-class BilayerMembrane:
+""" This module is designed to analyse membrane bilayer structures """
+
+import md_struct
+
+class Bilayer:
     """
-    A class to contain a bilayer structure.
+    A class to contain a bilayer structure, and provides routines for analysing it.
     """
     def __init__( self, upper_leaf: MDStruct, lower_leaf: MDStruct ):
         self.upper_hg = upper_leaf
