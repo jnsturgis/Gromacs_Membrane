@@ -9,7 +9,10 @@ from __future__ import annotations
 # Inspired by gropy written by Caizkun (?2019)
 #
 
+import os
 import numpy as np
+
+TOLERANCE = 0.001				# Tolerance for 2 numbers being equal
 
 class MDStruct():
     """
@@ -52,8 +55,10 @@ class MDStruct():
     def read_gro( self, filename: str ) -> None:
         """
         Read the structure that is included in the file "filename". 
-        6/11/2024 Version 1 adapted from Gropy/Gro.py.
+        6/11/2024 Version 1 adapted from Gropy/Gro.py on github.
         """
+        # TODO files can contain multiple structures should be able to read the n'th
+        # record and fail elegantly if there is not one.
         with open(filename, 'r', encoding="utf-8") as file_id:
             for line_count, line in enumerate(file_id):
                 line = line.rstrip()
@@ -98,7 +103,6 @@ class MDStruct():
                         f"{atom[7]:8.4f}{atom[8]:8.4f}{atom[9]:8.4f}\n")
             file_id.write(f"{self.box[0]:10.5f}{self.box[1]:10.5f}{self.box[2]:10.5f}\n")
             file_id.close()
-        pass
 
     def n_residues( self ) -> int:
         """
@@ -212,6 +216,22 @@ class MDStruct():
             print( expression )
         return False
 
+    def equal( self, another: MDStruct ) -> bool:
+        """Check if two structures are equal (within rounding errors) and excluding the title."""
+        result = True
+        result &= (self.n_atoms == another.n_atoms)
+        result &= (self.n_resid == another.n_resid)
+        if not result:
+            return result
+        for atom1, atom2 in zip(self.atoms, another.atoms):
+            for i in range(4):
+                result &= atom1[i] == atom2[i]
+            result &= (TOLERANCE > np.max(np.abs(np.array(atom1[4:])-np.array(atom2[4:]))))
+            if not result:
+                break
+        result &= np.max(np.abs(np.array(self.box) - np.array(another.box))) < TOLERANCE
+        return result
+
 # Test routines to check the class works OK.
 
 def test_start() -> None:
@@ -226,17 +246,41 @@ def test_end() -> None:
 
 def test_read_write() -> None:
     """Test the file reading and writing routines"""
+    errors = 0
     print("*                                              *")
     print("* Testing file reading and writing routines.   *")
     structure = MDStruct()                            # Create a structure with data from the file
     structure.read_gro( "test/data/DOPC2EC_100a_S6.gro" )
-    structure.is_valid()
     print("* Successfully read test structure gro file.   *")
+    if structure.is_valid() :
+        print("* The structure read from the file is valid.   *")
+    else :
+        print("* FAILURE: An invalid structure has resulted,  *")
+        print("* It will be written to test_out.gro to check. *")
+        errors += 1
     structure.write_gro( "test_out.gro" )
     print("* Successfully wrote test structure gro file.  *")
     # todo: check that it is as it should be
+    new_struct = MDStruct()
+    new_struct.read_gro( "test_out.gro" )
+    if new_struct.equal( structure ):
+        print("* Write and read did not modify the structure  *")
+    else :
+        print("* FAILURE: The structure has been changed by a *")
+        print("* write read cycle. Compare 'test_out.gro' and *")
+        print("* 'test_out2.gro'.                             *")
+        new_struct.write_gro( 'test_out2.gro' )
+        errors += 1
     # todo: write and then reread and check the same.
     print("*                                              *")
+    # If no errors found remove temporary files
+    if not errors:
+        print("* Removing temporary files as all well in I/O  *")
+        try:
+            os.remove("test_out.gro")
+        except OSError:
+            pass
+
 
 # Unit tests that are run if the file is called directly.
 if __name__ == "__main__":
