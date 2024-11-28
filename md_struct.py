@@ -271,8 +271,6 @@ def test_read_write() -> None:
         print("* 'test_out2.gro'.                             *")
         new_struct.write_gro( 'test_out2.gro' )
         errors += 1
-    # todo: write and then reread and check the same.
-    print("*                                              *")
     # If no errors found remove temporary files
     if not errors:
         print("* Removing temporary files as all well in I/O  *")
@@ -280,7 +278,7 @@ def test_read_write() -> None:
             os.remove("test_out.gro")
         except OSError:
             pass
-
+    print("*                                              *")
 
 # Unit tests that are run if the file is called directly.
 if __name__ == "__main__":
