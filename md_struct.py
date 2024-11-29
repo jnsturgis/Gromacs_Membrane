@@ -11,8 +11,58 @@ from __future__ import annotations
 
 import os
 import numpy as np
+import numpy.typing as npt
 
 TOLERANCE = 0.001				# Tolerance for 2 numbers being equal
+
+class Atom():
+    """
+    Class to contain an atom and do operations on atoms. Each atom has:
+        id   - a string saying what sort of particle it is.
+        num  - an identification number (unique within a structure)
+        pos  - the position as a numpy array of 3 floats in cartesian space
+        vel  - the velocity as a numpy array of 3 floats in cartesian space
+    """
+    id     : str
+    num    : int
+    resid  : str
+    resnum : int
+    pos    : npt.NDArray
+    vel    : npt.NDArray
+
+    def __init__(self, a_info: tuple(str,int), r_info: tuple(str,int),
+                       a_pos : list[float], a_vel : list[float] ):
+        """Constructor, use passed values to make an atom."""
+        self.id     = a_info[0]
+        self.num    = a_info[1]
+        self.resid  = r_info[0]
+        self.resnum = r_info[1]
+        assert len(a_pos) == 3
+        assert len(a_vel) == 3
+        self.pos    = np.array(a_pos)
+        self.vel    = np.array(a_vel)
+
+    def distance(self, location: npt.NDArray) -> float:
+        """Find the distance of an atom from an arbitrary location"""
+        assert len(location) == 3
+        vec = self.pos - location
+        return np.sqrt( np.sum ( vec * vec ))
+
+    def speed( self ) -> float:
+        """Find the speed of an atom from the velocity vector"""
+        return np.sqrt( np.sum ( self.vel * self.vel ))
+
+    def __eq__( self, other: Atom ) -> bool:
+        """
+        Are 2 atoms at the same place and same velocity and of the same type? Note they are still
+        considered the same if they have different unique ID numbers and belong to residues with
+        different names or numbers.
+        """
+        # pylint: disable=chained-comparison
+        return ((self.id == other.id)
+        	and (self.distance( other.pos ) < TOLERANCE )
+        	and TOLERANCE > np.sqrt(np.sum( (self.vel - other.vel) * (self.vel - other.vel)))
+        	)
 
 class MDStruct():
     """
@@ -20,16 +70,13 @@ class MDStruct():
     This object contains minimally:
         title    - some label describing the structure
         filename - where this information is stored or came from
-        n_atoms  - the number of atoms in the structure
-        n_resid  - the number of residues in the structure
         atoms    - with type, ID, 3D position and velocity, organized in residues with type and ID
+        resids   - the residues in the structure with name, ID, and atoms.
         box      - describing a bounding box dimensions
     """
     title    : str
     filename : str
-    n_atoms  : int
-    atoms    : list[ any ]                       # Actually a list of atom structures
-    n_resid  : int                               # TODO
+    atoms    : list[ Atom ]                      # Actually a list of atom structures
     resids   : list[ any ]                       # TODO Actually a list of residues
     box      : list[ float ]
 
@@ -39,20 +86,24 @@ class MDStruct():
         """
         self.title = "None"
         self.filename = ""
-        self.n_atoms = 0
         self.atoms = []
-        self.n_resid = 0
         self.resids = []
         self.box = [0.0, 0.0, 0.0]
         pass
+
+    def n_atoms( self ) -> int:
+        """How many atoms in the structure"""
+        return len(self.atoms)
+
+    def n_resid( self ) -> int:
+        """How many residues in the structure"""
+        return len(self.resids)
 
     def is_valid( self ) -> bool:
         """Check that the structure is sane"""
         # TODO all atoms in box
         # TODO atom - residue concordance
         return  (len(self.title) > 0
-               and len(self.atoms) == self.n_atoms
-               and len(self.resids) == self.n_resid
                and len(self.box) == 3)
 
     def copy( self ) -> MDStruct:
@@ -60,10 +111,8 @@ class MDStruct():
         new = MDStruct()
         new.title = self.title                   # TODO Probably should do a deeper copy here
         new.filename = ""
-        new.n_atoms = self.n_atoms
         for atom in self.atoms :
             new.atoms.append( atom )             # TODO Probably should do a deeper copy here
-        new.n_resid = self.n_resid
         for resid in self.resids :
             new.resids.append( resid )           # TODO Probably should do a deeper copy here
         new.box = self.box                       # TODO Probably should do a deeper copy here
@@ -83,8 +132,8 @@ class MDStruct():
                 if   line_count == 0 :
                     self.title = line
                 elif line_count == 1 :
-                    self.n_atoms = int(line)
-                    last_line = self.n_atoms + 1
+                    n_atoms = int(line)
+                    last_line = n_atoms + 1
                 elif line_count <= last_line :
                     if len(line) > 44 :
                         at_vx = float(line[44:52])
@@ -94,10 +143,10 @@ class MDStruct():
                         at_vx = 0.0
                         at_vy = 0.0
                         at_vz = 0.0
-                    self.atoms.append([ int(line[0:5]), line[5:10].strip(),
-                                        line[10:15].strip(), int(line[15:20]),
-                                        float(line[20:28]), float(line[28:36]), float(line[36:44]),
-                                        at_vx, at_vy, at_vz ])
+                    self.atoms.append( Atom( (line[5:10].strip(), int(line[0:5])),
+                               (line[10:15].strip(), int(line[15:20])),
+                               [ float(line[20:28]), float(line[28:36]), float(line[36:44]) ],
+                               [ at_vx, at_vy, at_vz ]))
                 else :
                     self.box = [ float( size ) for size in line.split() ]
         file_id.close()
@@ -114,11 +163,11 @@ class MDStruct():
         """
         with open(self.filename, 'w', encoding="utf-8") as file_id:
             file_id.write(f"{self.title}\n")
-            file_id.write(f" {self.n_atoms:d}\n")
+            file_id.write(f" {self.n_atoms():d}\n")
             for atom in self.atoms:
-                file_id.write(f"{atom[0]:5d}{atom[1]:<5s}{atom[2]:>5s}{atom[3]:5d}"
-                        f"{atom[4]:8.3f}{atom[5]:8.3f}{atom[6]:8.3f}"
-                        f"{atom[7]:8.4f}{atom[8]:8.4f}{atom[9]:8.4f}\n")
+                file_id.write(f"{atom.num:5d}{atom.id:<5s}{atom.resid:>5s}{atom.resnum:5d}"
+                        f"{atom.pos[0]:8.3f}{atom.pos[1]:8.3f}{atom.pos[2]:8.3f}"
+                        f"{atom.vel[0]:8.4f}{atom.vel[1]:8.4f}{atom.vel[2]:8.4f}\n")
             file_id.write(f"{self.box[0]:10.5f}{self.box[1]:10.5f}{self.box[2]:10.5f}\n")
             file_id.close()
 
@@ -126,20 +175,6 @@ class MDStruct():
         """Change the filename associated with a structure and then save."""
         self.filename = filename
         self.write_gro()
-
-    def n_residues( self ) -> int:
-        """
-        Count the number of residues in the structure.
-        This requires and assumes that all atoms of an individual residue are grouped together,
-        it also assumes that negative residue id's are invalid.
-        """
-        count = 0
-        last_resid = -1
-        for atom in self.atoms:
-            if atom[0] != last_resid :
-                last_resid = atom[0]
-                count += 1
-        return count
 
     def renumber(self) -> None:
         """
@@ -155,7 +190,7 @@ class MDStruct():
             atom[0] = curr_resid
             atom[3] = curr_atomid
 
-        assert curr_atomid == self.n_atoms
+        assert curr_atomid == self.n_atoms()
         pass
 
     def select( self, expression: str ) -> MDStruct :
@@ -169,7 +204,6 @@ class MDStruct():
 
         for atom in self.atoms:
             if new_structure.match( expression, atom ):
-                new_structure.n_atoms += 1
                 new_structure.atoms.append( atom )
         new_structure.renumber()
         return new_structure
@@ -185,7 +219,6 @@ class MDStruct():
         for atom in self.atoms:
             at_name = atom[2]
             if at_name in ("PO4", "PA4", "PB4"):
-                new_structure.n_atoms += 1
                 new_structure.atoms.append( atom )
 
         new_structure.renumber()
@@ -197,9 +230,9 @@ class MDStruct():
         """
 
         if start < 0 :
-            start = self.n_atoms + 1 + start
+            start = self.n_atoms() + 1 + start
         if end   < 0 :
-            end   = self.n_atoms + 1 + end
+            end   = self.n_atoms() + 1 + end
 
         assert start <= end , "The 'start' must be less than 'end'"
 
@@ -209,7 +242,6 @@ class MDStruct():
 
         for atom in self.atoms:
             if atom[3] <= end and atom[3] >= start :
-                new_structure.n_atoms += 1
                 new_structure.atoms.append( atom )
 
         new_structure.renumber()
@@ -229,7 +261,7 @@ class MDStruct():
         """Print a report on the structure, depending on the level of verbosity desired."""
         print( f"This is a report on the structure:\n{self.title}" )
         if verbosity > 0 :
-            print( f"The structure contains {self.n_atoms} atoms in {self.n_residues()} residues." )
+            print( f"The structure contains {self.n_atoms()} atoms in {self.n_resid()} residues." )
             print()
         pass
 
@@ -242,14 +274,12 @@ class MDStruct():
     def equal( self, another: MDStruct ) -> bool:
         """Check if two structures are equal (within rounding errors) and excluding the title."""
         result = True
-        result &= (self.n_atoms == another.n_atoms)
-        result &= (self.n_resid == another.n_resid)
+        result &= (self.n_atoms() == another.n_atoms())
+        result &= (self.n_resid() == another.n_resid())
         if not result:
             return result
         for atom1, atom2 in zip(self.atoms, another.atoms):
-            for i in range(4):
-                result &= atom1[i] == atom2[i]
-            result &= (TOLERANCE > np.max(np.abs(np.array(atom1[4:])-np.array(atom2[4:]))))
+            result &= (atom1 == atom2)
             if not result:
                 break
         result &= np.max(np.abs(np.array(self.box) - np.array(another.box))) < TOLERANCE
@@ -264,7 +294,7 @@ class MDStruct():
         return not self.equal( other )
     def __str__( self ) -> str:
         """Print a sensible description of the MDStruct object"""
-        return f"MDStruct: '{self.title}' with {self.n_atoms} atoms in a box."
+        return f"MDStruct: '{self.title}' with {self.n_atoms()} atoms in a box."
 
 # Test routines to check the class works OK.
 
@@ -281,6 +311,14 @@ def test_end() -> None:
 def test_read_write() -> None:
     """Test the file reading and writing routines"""
     errors = 0
+
+    # Remove old temporary files
+    # pylint: disable=multiple-statements
+    try: os.remove("test_out.gro")
+    except OSError: pass
+    try: os.remove("test_out2.gro")
+    except OSError: pass
+
     print("*                                              *")
     print("* Testing file reading and writing routines.   *")
     structure = MDStruct()                            # Create a structure with data from the file
@@ -308,10 +346,8 @@ def test_read_write() -> None:
     # If no errors found remove temporary files
     if not errors:
         print("* Removing temporary files as all well in I/O  *")
-        try:
-            os.remove("test_out.gro")
-        except OSError:
-            pass
+        try: os.remove("test_out.gro")
+        except OSError: pass
     print("*                                              *")
 
 # Unit tests that are run if the file is called directly.
