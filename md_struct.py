@@ -27,7 +27,6 @@ class MDStruct():
     """
     title    : str
     filename : str
-    changed  : bool
     n_atoms  : int
     atoms    : list[ any ]                       # Actually a list of atom structures
     n_resid  : int                               # TODO
@@ -40,7 +39,6 @@ class MDStruct():
         """
         self.title = "None"
         self.filename = ""
-        self.changed = False
         self.n_atoms = 0
         self.atoms = []
         self.n_resid = 0
@@ -62,7 +60,6 @@ class MDStruct():
         new = MDStruct()
         new.title = self.title                   # TODO Probably should do a deeper copy here
         new.filename = ""
-        new.changed = True
         new.n_atoms = self.n_atoms
         for atom in self.atoms :
             new.atoms.append( atom )             # TODO Probably should do a deeper copy here
@@ -80,7 +77,6 @@ class MDStruct():
         # TODO files can contain multiple structures should be able to read the n'th
         # record and fail elegantly if there is not one.
         self.filename = filename
-        self.changed  = False
         with open(filename, 'r', encoding="utf-8") as file_id:
             for line_count, line in enumerate(file_id):
                 line = line.rstrip()
@@ -116,7 +112,7 @@ class MDStruct():
         can cause loss of precision as floats are truncated etc.
         Version 1.0 27/11/24 adapte from gropy/Gro.py
         """
-        with open(filename, 'w', encoding="utf-8") as file_id:
+        with open(self.filename, 'w', encoding="utf-8") as file_id:
             file_id.write(f"{self.title}\n")
             file_id.write(f" {self.n_atoms:d}\n")
             for atom in self.atoms:
@@ -127,6 +123,7 @@ class MDStruct():
             file_id.close()
 
     def write_gro_as( self, filename : str) -> None:
+        """Change the filename associated with a structure and then save."""
         self.filename = filename
         self.write_gro()
 
@@ -284,7 +281,7 @@ def test_read_write() -> None:
         print("* FAILURE: An invalid structure has resulted,  *")
         print("* It will be written to test_out.gro to check. *")
         errors += 1
-    structure.write_gro( "test_out.gro" )
+    structure.write_gro_as( "test_out.gro" )
     print("* Successfully wrote test structure gro file.  *")
     # todo: check that it is as it should be
     new_struct = MDStruct()
