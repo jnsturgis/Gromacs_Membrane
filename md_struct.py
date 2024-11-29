@@ -17,25 +17,28 @@ TOLERANCE = 0.001				# Tolerance for 2 numbers being equal
 class MDStruct():
     """
     A structural configuration class, for example from a molecular dynamics or structure file.
-    This object contains minimally: 
-        title   - some label describing the structure
-        n_atoms - the number of atoms in the structure
-        n_resid - the number of residues in the structure
-        atoms   - with type, ID, 3D position and velocity, organized in residues with type and ID
-        box     - describing a bounding box dimensions
+    This object contains minimally:
+        title    - some label describing the structure
+        filename - where this information is stored or came from
+        n_atoms  - the number of atoms in the structure
+        n_resid  - the number of residues in the structure
+        atoms    - with type, ID, 3D position and velocity, organized in residues with type and ID
+        box      - describing a bounding box dimensions
     """
-    title   : str
-    n_atoms : int
-    atoms   : list[ any ]                        # Actually a list of atom structures
-    n_resid : int                                # TODO
-    resids  : list[ any ]                        # TODO Actually a list of residues
-    box     : list[ float ]
+    title    : str
+    filename : str
+    n_atoms  : int
+    atoms    : list[ any ]                       # Actually a list of atom structures
+    n_resid  : int                               # TODO
+    resids   : list[ any ]                       # TODO Actually a list of residues
+    box      : list[ float ]
 
     def __init__(self):
         """
         Constructor - make a minimal valid structure (nothing in a point).
         """
         self.title = "None"
+        self.filename = ""
         self.n_atoms = 0
         self.atoms = []
         self.n_resid = 0
@@ -52,13 +55,28 @@ class MDStruct():
                and len(self.resids) == self.n_resid
                and len(self.box) == 3)
 
+    def copy( self ) -> MDStruct:
+        """Make a copy of a structure, so one can be modified and the other remains the same."""
+        new = MDStruct()
+        new.title = self.title                   # TODO Probably should do a deeper copy here
+        new.filename = ""
+        new.n_atoms = self.n_atoms
+        for atom in self.atoms :
+            new.atoms.append( atom )             # TODO Probably should do a deeper copy here
+        new.n_resid = self.n_resid
+        for resid in self.resids :
+            new.resids.append( resid )           # TODO Probably should do a deeper copy here
+        new.box = self.box                       # TODO Probably should do a deeper copy here
+        return new
+
     def read_gro( self, filename: str ) -> None:
         """
-        Read the structure that is included in the file "filename". 
+        Read the structure that is included in the file "filename".
         6/11/2024 Version 1 adapted from Gropy/Gro.py on github.
         """
         # TODO files can contain multiple structures should be able to read the n'th
         # record and fail elegantly if there is not one.
+        self.filename = filename
         with open(filename, 'r', encoding="utf-8") as file_id:
             for line_count, line in enumerate(file_id):
                 line = line.rstrip()
@@ -88,13 +106,13 @@ class MDStruct():
         assert self.is_valid()
         pass
 
-    def write_gro( self, filename: str ) -> None:
+    def write_gro( self ) -> None:
         """
         Write a valid .gro file into the named file using the structure. Note that this
         can cause loss of precision as floats are truncated etc.
         Version 1.0 27/11/24 adapte from gropy/Gro.py
         """
-        with open(filename, 'w', encoding="utf-8") as file_id:
+        with open(self.filename, 'w', encoding="utf-8") as file_id:
             file_id.write(f"{self.title}\n")
             file_id.write(f" {self.n_atoms:d}\n")
             for atom in self.atoms:
@@ -103,6 +121,11 @@ class MDStruct():
                         f"{atom[7]:8.4f}{atom[8]:8.4f}{atom[9]:8.4f}\n")
             file_id.write(f"{self.box[0]:10.5f}{self.box[1]:10.5f}{self.box[2]:10.5f}\n")
             file_id.close()
+
+    def write_gro_as( self, filename : str) -> None:
+        """Change the filename associated with a structure and then save."""
+        self.filename = filename
+        self.write_gro()
 
     def n_residues( self ) -> int:
         """
@@ -269,7 +292,7 @@ def test_read_write() -> None:
         print("* FAILURE: An invalid structure has resulted,  *")
         print("* It will be written to test_out.gro to check. *")
         errors += 1
-    structure.write_gro( "test_out.gro" )
+    structure.write_gro_as( "test_out.gro" )
     print("* Successfully wrote test structure gro file.  *")
     # todo: check that it is as it should be
     new_struct = MDStruct()
@@ -280,7 +303,7 @@ def test_read_write() -> None:
         print("* FAILURE: The structure has been changed by a *")
         print("* write read cycle. Compare 'test_out.gro' and *")
         print("* 'test_out2.gro'.                             *")
-        new_struct.write_gro( 'test_out2.gro' )
+        new_struct.write_gro_as( 'test_out2.gro' )
         errors += 1
     # If no errors found remove temporary files
     if not errors:
