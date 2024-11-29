@@ -232,6 +232,17 @@ class MDStruct():
         result &= np.max(np.abs(np.array(self.box) - np.array(another.box))) < TOLERANCE
         return result
 
+# Dunder comparison methods that make sense only comparing 2 structures
+    def __eq__( self, other: MDStruct ) -> bool:
+        """Check for equality"""
+        return self.equal( other )
+    def __ne__( self, other: MDStruct ) -> bool:
+        """Not equal is obvious"""
+        return not self.equal( other )
+    def __str__( self ) -> str:
+        """Print a sensible description of the MDStruct object"""
+        return f"MDStruct: '{self.title}' with {self.n_atoms} atoms in a box."
+
 # Test routines to check the class works OK.
 
 def test_start() -> None:
