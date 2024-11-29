@@ -23,7 +23,7 @@ class Atom():
         pos  - the position as a numpy array of 3 floats in cartesian space
         vel  - the velocity as a numpy array of 3 floats in cartesian space
     """
-    id     : str
+    atid   : str
     num    : int
     resid  : str
     resnum : int
@@ -33,7 +33,7 @@ class Atom():
     def __init__(self, a_info: tuple(str,int), r_info: tuple(str,int),
                        a_pos : list[float], a_vel : list[float] ):
         """Constructor, use passed values to make an atom."""
-        self.id     = a_info[0]
+        self.atid   = a_info[0]
         self.num    = a_info[1]
         self.resid  = r_info[0]
         self.resnum = r_info[1]
@@ -59,7 +59,7 @@ class Atom():
         different names or numbers.
         """
         # pylint: disable=chained-comparison
-        return ((self.id == other.id)
+        return ((self.atid == other.atid)
         	and (self.distance( other.pos ) < TOLERANCE )
         	and TOLERANCE > np.sqrt(np.sum( (self.vel - other.vel) * (self.vel - other.vel)))
         	)
@@ -271,27 +271,30 @@ class MDStruct():
             print( expression )
         return False
 
-    def equal( self, another: MDStruct ) -> bool:
-        """Check if two structures are equal (within rounding errors) and excluding the title."""
+# Dunder comparison methods that make sense only comparing 2 structures
+    def __eq__( self, other: MDStruct ) -> bool:
+        """
+        Check if two structures are equal that is have the same number of atoms and residues,
+        and the atoms are of the same type with the same position and velocity (within rounding
+        errors). This does not require the same file and title.
+        TODO the residues should match as well in type, and atomic composition.
+        """
         result = True
-        result &= (self.n_atoms() == another.n_atoms())
-        result &= (self.n_resid() == another.n_resid())
+        result &= (self.n_atoms() == other.n_atoms())
+        result &= (self.n_resid() == other.n_resid())
         if not result:
             return result
-        for atom1, atom2 in zip(self.atoms, another.atoms):
+        for atom1, atom2 in zip(self.atoms, other.atoms):
             result &= (atom1 == atom2)
             if not result:
                 break
-        result &= np.max(np.abs(np.array(self.box) - np.array(another.box))) < TOLERANCE
+        result &= np.max(np.abs(np.array(self.box) - np.array(other.box))) < TOLERANCE
         return result
 
-# Dunder comparison methods that make sense only comparing 2 structures
-    def __eq__( self, other: MDStruct ) -> bool:
-        """Check for equality"""
-        return self.equal( other )
     def __ne__( self, other: MDStruct ) -> bool:
         """Not equal is obvious"""
-        return not self.equal( other )
+        return not self == other
+
     def __str__( self ) -> str:
         """Print a sensible description of the MDStruct object"""
         return f"MDStruct: '{self.title}' with {self.n_atoms()} atoms in a box."
@@ -335,7 +338,7 @@ def test_read_write() -> None:
     # todo: check that it is as it should be
     new_struct = MDStruct()
     new_struct.read_gro( "test_out.gro" )
-    if new_struct.equal( structure ):
+    if new_struct == structure :
         print("* Write and read did not modify the structure  *")
     else :
         print("* FAILURE: The structure has been changed by a *")
