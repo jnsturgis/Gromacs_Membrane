@@ -195,6 +195,14 @@ class MDStruct():
                     self.box = [ float( size ) for size in line.split() ]
         file_id.close()
         # TODO setup the residues
+        current_residue = -1
+        residue = None
+        for atom in self.atoms:
+            if atom.resnum > current_residue :
+                current_residue = atom.resnum
+                residue = Residue( atom.resid, atom.resnum)
+                self.resids.append(residue)
+            residue.add_atom(atom)
         # Check here that the result is valid.
         assert self.is_valid()
         pass
