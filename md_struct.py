@@ -63,6 +63,37 @@ class Atom():
         	and (self.distance( other.pos ) < TOLERANCE )
         	and TOLERANCE > np.sqrt(np.sum( (self.vel - other.vel) * (self.vel - other.vel)))
         	)
+class Residue():
+    """
+    A residue class for handling residues within structures. Each residue has:
+        name  - which describes the type of residue, for example DOPC for di-oleyl phosphatidyl
+                choline
+        idnum - a unique id number (there can be more than one copy of a given type of residue).
+                Within a valid structure no two residues can have the same unique id number.
+        atoms - a list of atoms.
+    """
+    name  : str
+    idnum : int
+    atoms : list[Atom]
+
+    def __init__(self, r_name: str, r_id: int ):
+        """Create a new residue with the given name and idnumber but no atoms"""
+        self.name = r_name
+        self.idnum = r_id
+        self.atoms = []
+
+    def add_atom( self, atom: Atom ) -> None:
+        """Add an atom to the residue"""
+        self.atoms.append(atom)
+
+    def __eq__(self, other: Residue ) -> bool:
+        """Two redidues are equal if they are of the same type and their atoms are equal."""
+        # pylint: disable=multiple-statements
+        if self.name != other.name : return False
+        if len(self.atoms) != len(other.atoms) : return False
+        for atom1, atom2 in zip(self.atoms, other.atoms):
+            if atom1 != atom2: return False
+        return True
 
 class MDStruct():
     """
@@ -117,6 +148,19 @@ class MDStruct():
             new.resids.append( resid )           # TODO Probably should do a deeper copy here
         new.box = self.box                       # TODO Probably should do a deeper copy here
         return new
+
+    def merge( self, other: MDStruct ) -> None:
+        """
+        Insert the residues and atoms of the second structure into the first, which is renamed
+        in consequence.
+        """
+        # pylint: disable=multiple-statements
+        for atom in other.atoms: self.atoms.append(atom)
+        for residue in other.resids: self.resids.append(residue)
+        part1 = self.filename if len(self.filename) > 0 else self.title
+        part2 = other.filename if len(other.filename) > 0 else other.title
+        self.title = f"{part1} plus {part2}"
+        self.filename = ""
 
     def read_gro( self, filename: str ) -> None:
         """
