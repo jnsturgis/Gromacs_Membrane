@@ -217,7 +217,7 @@ class MDStruct():
             file_id.write(f"{self.title}\n")
             file_id.write(f" {self.n_atoms():d}\n")
             for atom in self.atoms:
-                file_id.write(f"{atom.num:5d}{atom.id:<5s}{atom.resid:>5s}{atom.resnum:5d}"
+                file_id.write(f"{atom.num:5d}{atom.atid:<5s}{atom.resid:>5s}{atom.resnum:5d}"
                         f"{atom.pos[0]:8.3f}{atom.pos[1]:8.3f}{atom.pos[2]:8.3f}"
                         f"{atom.vel[0]:8.4f}{atom.vel[1]:8.4f}{atom.vel[2]:8.4f}\n")
             file_id.write(f"{self.box[0]:10.5f}{self.box[1]:10.5f}{self.box[2]:10.5f}\n")
